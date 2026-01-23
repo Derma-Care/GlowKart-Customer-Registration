@@ -6,11 +6,9 @@ import {
   CForm,
   CFormInput,
   CFormLabel,
-  CFormCheck,
   CButton,
   CRow,
   CCol,
-  CAlert,
   CFormSelect,
   CInputGroup,
   CInputGroupText,
@@ -18,9 +16,6 @@ import {
 import DermaCareLogo from '../../../assets/images/logoP.png'
 import bgLogo from '../../../assets/images/bgLogo.png'
 import '../CustomerRrgistration/Register.css'
-import SpinWheel from './SpinWheel'
-import SpinResultCard from './SpinResultCard'
-import PrizePostDetails from './PrizePostDetails'
 
 import Select from 'react-select'
 import { showCustomToast } from '../../../Utils/Toaster'
@@ -32,15 +27,13 @@ import { processFile } from '../Utills/fileUtils'
 import { UploadedPreview } from '../Utills/FileUpload'
 import { getAllProcedures } from '../APIs/procedureService'
 import { getCustomerByCode } from '../APIs/customerApiUsingRC'
-import OnboardingStepsCard from '../Widget/onboarding_steps_card'
-import OnboardingStepsModal from '../Widget/OnboardingStepsModal'
-import RegistrationCodeCard from '../Widget/RegistrationCodeCard'
+
 import { NGK_COLORS } from '../../../Constant/Themes'
-import { BASE_URL, wifiUrl } from '../../../baseUrl'
+import { wifiUrl } from '../../../baseUrl'
 import AadhaarConsentModal from './AadhaarConsentModal'
 import UserConsentModal from './UserConsentModal'
 import CIcon from '@coreui/icons-react'
-import { cilCalendar, cilInfo } from '@coreui/icons'
+import { cilCalendar } from '@coreui/icons'
 import {
   isOnlyAlphabetsWithSpecialChars,
   isValidAadhaarName,
@@ -52,9 +45,7 @@ export default function CustomerRegistrationRefferalCode() {
   const today = new Date()
   const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
 
-  const eighteenYearsAgoISO = eighteenYearsAgo.toISOString().split('T')[0]
   const hundredYearsAgo = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate())
-  const hundredYearsAgoISO = hundredYearsAgo.toISOString().split('T')[0]
 
   // subtract 12 months
   const past1Year = new Date(today.getFullYear() - 1, today.getMonth(), today.getDate())
@@ -113,7 +104,7 @@ export default function CustomerRegistrationRefferalCode() {
   const [form, setForm] = useState({
     fullName: '',
     mobile: '',
-    email: '',
+    // email: '',
     city: '',
     otherCity: '',
     dob: '',
@@ -122,17 +113,17 @@ export default function CustomerRegistrationRefferalCode() {
     clinicCityArea: '',
     dateOfLastVisit: '',
     serviceType: [],
-    blood: '',
-    registraionCode: '',
+    // blood: '',
+    // registraionCode: '',
     // referBy: '',
     Aadhar: '',
     prescription: '',
-    referBy: "",
+    referBy: '',
     otherServiceName: '',
     gender: '',
- 
+
     address: '',
-  referralCode: '', 
+    referralCode: '',
     // Interested flow
     serviceStatus: '',
     interestCategory: '',
@@ -144,47 +135,6 @@ export default function CustomerRegistrationRefferalCode() {
     userConsent: false,
     privacyConsent: false,
   })
-
-  function applyBackendStatus(status) {
-    const {
-      registrationCompleted,
-      registrationCodeVerified,
-      spinWheelCompleted,
-      userProfileCompleted,
-    } = status
-
-    // 1️⃣ Registration already done → stop
-    if (registrationCompleted) {
-      showCustomToast('❌ Registration already completed!', 'error')
-      return
-    }
-
-    // 2️⃣ If user profile NOT completed → show registration form
-    if (!userProfileCompleted) {
-      setIsRegistration(false) // hide referral code page
-      setSubmitted(false)
-      setShowWheel(false)
-      setInstagram(false)
-      return
-    }
-
-    // 3️⃣ User completed profile but not spin → show wheel
-    if (!spinWheelCompleted) {
-      setIsRegistration(false)
-      setSubmitted(true)
-      setShowWheel(true) // show wheel
-      setInstagram(false)
-      return
-    }
-
-    // 4️⃣ Spin is done → show prize result
-    if (spinWheelCompleted) {
-      setSubmitted(true)
-      setShowWheel(false)
-      setInstagram(false)
-      return
-    }
-  }
 
   const serviceStatusRef = React.useRef(null)
 
@@ -240,13 +190,6 @@ export default function CustomerRegistrationRefferalCode() {
       delete n[name]
       return n
     })
-  }
-
-  // Handle input change
-  const handleRefChange = (e) => {
-    const value = e.target.value.toUpperCase()
-    setError('')
-    setForm((prev) => ({ ...prev, registraionCode: value }))
   }
 
   function formatAndValidateDateInput(raw) {
@@ -344,50 +287,6 @@ export default function CustomerRegistrationRefferalCode() {
     return true
   }
 
-  const handleSubmitReferralCode = async () => {
-    const code = form.registraionCode.trim()
-    sessionStorage.setItem('registraionCode', code)
-
-    if (!code) {
-      setError('⚠️ Please enter your registration code.')
-      return
-    }
-
-    try {
-      setVerifyLoading(true)
-      setError('')
-
-      const result = await verifyRegistrationCode(code)
-      console.log('Verify Code Result:', result)
-
-      // ❌ If verification failed → STOP HERE
-      if (!result.success) {
-        setError(result.message || '❌ Invalid registration code.')
-        return // ⛔ IMPORTANT — do not continue
-      }
-
-      // ✔ If success, show toast + load cities
-      showCustomToast(result.message || '🎉 Registration code verified!', 'success')
-      await fetchCities()
-
-      applyBackendStatus(result.data)
-
-      // 3️⃣ Fetch customer details
-      const customerRes = await getCustomerByCode(code)
-
-      if (customerRes.success) {
-        const customer = customerRes.data
-        setUserData(customer)
-      }
-      // ⭐ NOW call backend status
-    } catch (err) {
-      console.error('Verify Code Error:', err)
-      setError('⚠️ Something went wrong. Try again.')
-    } finally {
-      setVerifyLoading(false)
-    }
-  }
-
   console.log(form.otherServiceName)
 
   function validate() {
@@ -407,16 +306,16 @@ export default function CustomerRegistrationRefferalCode() {
     }
 
     // 🔴 Referral Code (MANDATORY)
-if (!form.referralCode || !form.referralCode.trim()) {
-  e.referralCode = 'Referral code is required'
-} else if (!/^[A-Z0-9]{4,10}$/.test(form.referralCode)) {
-  e.referralCode = 'Invalid referral code'
-}
+    if (!form.referralCode || !form.referralCode.trim()) {
+      e.referralCode = 'Referral code is required'
+    } else if (!/^[A-Z0-9]{4,10}$/.test(form.referralCode)) {
+      e.referralCode = 'Invalid referral code'
+    }
 
-// 🟡 Refer By (OPTIONAL)
-if (form.referBy && !isValidAadhaarName(form.referBy)) {
-  e.referBy = 'Refer by name must contain only alphabets'
-}
+    // 🟡 Refer By (OPTIONAL)
+    if (form.referBy && !isValidAadhaarName(form.referBy)) {
+      e.referBy = 'Refer by name must contain only alphabets'
+    }
 
     // if (!form.city) e.city = 'City is required'
 
@@ -430,11 +329,9 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
       }
     }
 
-      if (!form.address || !isValidAddress(form.address)) {
-        e.address = 'Please enter complete address'
-      }
-
-
+    if (!form.address || !isValidAddress(form.address)) {
+      e.address = 'Please enter complete address'
+    }
 
     if (!/^\d{12}$/.test(form.Aadhar)) e.Aadhar = 'Enter a valid 12-digit Aadhaar number'
 
@@ -565,7 +462,6 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
       setServiceStatusError('')
     }
 
-     
     const { valid, errorObj } = validate()
     if (!valid) {
       scrollToFirstError(errorObj)
@@ -583,9 +479,9 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
       dateOfLastVisit: ddmmyyyyToIso(form.dateOfLastVisit),
       serviceType: form.serviceType.map((s) => (s === 'other' ? form.otherServiceName : s)),
       blood: form.blood,
-      registrationCode: form.registraionCode || sessionStorage.getItem('registraionCode'),
-    referralCode: form.referralCode,   // ✅ mandatory
-  referBy: form.referBy || null,
+      // registrationCode: form.registraionCode || sessionStorage.getItem('registraionCode'),
+      referralCode: form.referralCode, // ✅ mandatory
+      referBy: form.referBy || null,
       aadharNumber: form.Aadhar,
       prescription: form.prescription, // File or text
       // referBy: form.referBy,
@@ -601,7 +497,7 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
       aadhaarConsent: form.aadhaarConsent,
       userConsent: form.userConsent,
       privacyConsent: form.privacyConsent,
-       address: form.address,
+      address: form.address,
     }
 
     console.log(form)
@@ -640,22 +536,6 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
       setLoading(false)
     }
   }
-
-  useEffect(() => {
-    const sessionData = sessionStorage.getItem('ngk_session')
-
-    if (sessionData) {
-      const state = JSON.parse(sessionData)
-
-      setIsRegistration(state.isRegistration)
-      setSubmitted(state.submitted)
-      setShowWheel(state.showWheel)
-      setInstagram(state.instagram)
-      setUserData(state.userData || null)
-      // setWinnerPrize(state.winnerPrize || null)
-      setSpinWhell(state.spinWhell || false)
-    }
-  }, [])
 
   const handleServiceStatusSelect = (status) => {
     let missing = []
@@ -707,22 +587,6 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
 
     return rest
   }
-
-  useEffect(() => {
-    const stateToSave = {
-      isRegistration,
-      submitted,
-      showWheel,
-      instagram,
-      userData: cleanUserData(userData),
-      // winnerPrize,
-      spinWhell,
-    }
-
-    sessionStorage.setItem('ngk_session', JSON.stringify(stateToSave))
-  }, [isRegistration, submitted, showWheel, instagram, userData, winnerPrize, spinWhell])
-
-  console.log(form.serviceStatus)
 
   const scrollToFirstError = (errorsObject) => {
     const firstErrorField = Object.keys(errorsObject).find((key) => errorsObject[key])
@@ -1030,61 +894,55 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
                   </CCol>
 
                   {/* {errors.city && <p style={{ color: '#ff2e85' }}>{errors.city}</p>} */}
-                   <CCol md={6}>
+                  <CCol md={6}>
+                    <RefferalCodeAddress form={form} setForm={setForm} error={errors.address} />
+                  </CCol>
 
-                     <RefferalCodeAddress form={form} setForm={setForm} error={errors.address}/>
-                   </CCol>
-                 
-                 
-                                      <CCol md={6}>
-  <CFormLabel
-    className="label-gradient"
-    style={{ color: NGK_COLORS.primarySoft }}
-  >
-    Referral Code <span className="text-danger">*</span>
-  </CFormLabel>
+                  <CCol md={6}>
+                    <CFormLabel
+                      className="label-gradient"
+                      style={{ color: NGK_COLORS.primarySoft }}
+                    >
+                      Referral Code <span className="text-danger">*</span>
+                    </CFormLabel>
 
-  <CFormInput
-    placeholder="Enter referral code"
-    value={form.referralCode}
-    onChange={(e) => {
-      const value = e.target.value.toUpperCase().trim()
-      setForm((prev) => ({ ...prev, referralCode: value }))
-      setErrors((prev) => ({ ...prev, referralCode: null }))
-    }}
-  />
+                    <CFormInput
+                      placeholder="Enter referral code"
+                      value={form.referralCode}
+                      onChange={(e) => {
+                        const value = e.target.value.toUpperCase().trim()
+                        setForm((prev) => ({ ...prev, referralCode: value }))
+                        setErrors((prev) => ({ ...prev, referralCode: null }))
+                      }}
+                    />
 
-  {errors.referralCode && (
-    <p style={{ color: 'red', fontSize: 13 }}>
-      {errors.referralCode}
-    </p>
-  )}
-</CCol>
-<CCol md={6}>
-  <CFormLabel
-    className="label-gradient"
-    style={{ color: NGK_COLORS.primarySoft }}
-  >
-    Refer By <span className="text-muted">(Optional)</span>
-  </CFormLabel>
+                    {errors.referralCode && (
+                      <p style={{ color: 'red', fontSize: 13 }}>{errors.referralCode}</p>
+                    )}
+                  </CCol>
+                  <CCol md={6}>
+                    <CFormLabel
+                      className="label-gradient"
+                      style={{ color: NGK_COLORS.primarySoft }}
+                    >
+                      Refer By <span className="text-muted">(Optional)</span>
+                    </CFormLabel>
 
-  <CFormInput
-    placeholder="Enter referrer name (optional)"
-    value={form.referBy}
-    onChange={(e) => {
-      const value = e.target.value
-      setForm((prev) => ({ ...prev, referBy: value }))
-      setErrors((prev) => ({ ...prev, referBy: null }))
-    }}
-  />
+                    <CFormInput
+                      placeholder="Enter referrer name (optional)"
+                      value={form.referBy}
+                      onChange={(e) => {
+                        const value = e.target.value
+                        setForm((prev) => ({ ...prev, referBy: value }))
+                        setErrors((prev) => ({ ...prev, referBy: null }))
+                      }}
+                    />
 
-  {errors.referBy && (
-    <p style={{ color: 'red', fontSize: 13 }}>
-      {errors.referBy}
-    </p>
-  )}
-</CCol>
- <CCol md={12}>
+                    {errors.referBy && (
+                      <p style={{ color: 'red', fontSize: 13 }}>{errors.referBy}</p>
+                    )}
+                  </CCol>
+                  <CCol md={12}>
                     <CFormLabel
                       className="label-gradient "
                       style={{ color: NGK_COLORS.primarySoft }}
@@ -1163,10 +1021,8 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
                       </p>
                     )}
 
-
                     {/* Error */}
                   </CCol>
-
 
                   <CCol md={12} style={{ marginTop: '20px' }}>
                     <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px' }}>
@@ -1348,7 +1204,7 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
                       className="d-flex justify-content-center"
                     >
                       <CButton
-                      type='button'
+                        type="button"
                         style={{
                           backgroundColor:
                             form.serviceStatus === '1' ? NGK_COLORS.primary : '#e4e4e4',
@@ -1365,8 +1221,7 @@ if (form.referBy && !isValidAadhaarName(form.referBy)) {
                       </CButton>
 
                       <CButton
-                      type='button'
-
+                        type="button"
                         style={{
                           backgroundColor:
                             form.serviceStatus === '2' ? NGK_COLORS.primary : '#e4e4e4',
