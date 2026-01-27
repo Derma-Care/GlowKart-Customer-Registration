@@ -20,7 +20,7 @@ import '../CustomerRrgistration/Register.css'
 import Select from 'react-select'
 import { showCustomToast } from '../../../Utils/Toaster'
 
-import { registerCustomer } from '../APIs/registerCustomerApi'
+import { registerCustomer, registerCustomerRf } from '../APIs/registerCustomerApi'
 import { verifyRegistrationCode } from '../APIs/verifyRegistrationCode'
 
 import { processFile } from '../Utills/fileUtils'
@@ -41,6 +41,7 @@ import {
   isValidAlphaNumericName,
 } from '../Utills/isValidAlphaNumericName'
 import RefferalCodeAddress from './RefferalCodeAddress'
+import { useNavigate } from 'react-router-dom'
 export default function CustomerRegistrationRefferalCode() {
   const today = new Date()
   const eighteenYearsAgo = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate())
@@ -71,7 +72,7 @@ export default function CustomerRegistrationRefferalCode() {
   const [cityList, setCityList] = useState([])
   const [highlightAadhaarConsent, setHighlightAadhaarConsent] = useState(false)
   const [cityOptions, setCityOptions] = useState([])
-
+ const navigate = useNavigate()
   const indianSkinTones = [
     { value: 'Very Fair', label: 'Very Fair' },
     { value: 'Fair', label: 'Fair' },
@@ -306,16 +307,17 @@ export default function CustomerRegistrationRefferalCode() {
     }
 
     // 🔴 Referral Code (MANDATORY)
-    if (!form.referralCode || !form.referralCode.trim()) {
-      e.referralCode = 'Referral code is required'
-    } else if (!/^[A-Z0-9]{4,10}$/.test(form.referralCode)) {
-      e.referralCode = 'Invalid referral code'
-    }
+    // if (!form.referralCode || !form.referralCode.trim()) {
+    //   e.referralCode = 'Referral code is required'
+    // } else
+    //    if (!/^[A-Z0-9]{4,10}$/.test(form.referralCode)) {
+    //   e.referralCode = 'Invalid referral code'
+    // }
 
-    // 🟡 Refer By (OPTIONAL)
-    if (form.referBy && !isValidAadhaarName(form.referBy)) {
-      e.referBy = 'Refer by name must contain only alphabets'
-    }
+    // // 🟡 Refer By (OPTIONAL)
+    // if (form.referBy && !isValidAadhaarName(form.referBy)) {
+    //   e.referBy = 'Refer by name must contain only alphabets'
+    // }
 
     // if (!form.city) e.city = 'City is required'
 
@@ -480,8 +482,8 @@ export default function CustomerRegistrationRefferalCode() {
       serviceType: form.serviceType.map((s) => (s === 'other' ? form.otherServiceName : s)),
       blood: form.blood,
       // registrationCode: form.registraionCode || sessionStorage.getItem('registraionCode'),
-      referralCode: form.referralCode, // ✅ mandatory
-      referBy: form.referBy || null,
+      referId: form.referralCode, // ✅ mandatory
+      // referBy: form.referBy || null,
       aadharNumber: form.Aadhar,
       prescription: form.prescription, // File or text
       // referBy: form.referBy,
@@ -507,7 +509,7 @@ export default function CustomerRegistrationRefferalCode() {
 
     setLoading(true)
     try {
-      const result = await registerCustomer(payload)
+      const result = await registerCustomerRf(payload)
       console.log(result)
       const newErrors = { ...errors }
       if (!result.success) {
@@ -527,8 +529,17 @@ export default function CustomerRegistrationRefferalCode() {
       setSubmitted(true)
       const data = result.data
       console.log('Customer Registered ID:', data)
+      
       setUserData(data)
       setShowWheel(true)
+   navigate('/onboard-success', {
+  state: {
+    name: form.fullName,
+    data: form,
+    isregister: false,
+  },
+})
+
     } catch (error) {
       console.error('Registration Error:', error)
       showCustomToast('⚠️ Something went wrong! Please try again.', 'error')
@@ -903,7 +914,7 @@ export default function CustomerRegistrationRefferalCode() {
                       className="label-gradient"
                       style={{ color: NGK_COLORS.primarySoft }}
                     >
-                      Referral Code <span className="text-danger">*</span>
+                      Referral Code (Optional)  
                     </CFormLabel>
 
                     <CFormInput
@@ -912,15 +923,15 @@ export default function CustomerRegistrationRefferalCode() {
                       onChange={(e) => {
                         const value = e.target.value.toUpperCase().trim()
                         setForm((prev) => ({ ...prev, referralCode: value }))
-                        setErrors((prev) => ({ ...prev, referralCode: null }))
+                        // setErrors((prev) => ({ ...prev, referralCode: null }))
                       }}
                     />
 
-                    {errors.referralCode && (
+                    {/* {errors.referralCode && (
                       <p style={{ color: 'red', fontSize: 13 }}>{errors.referralCode}</p>
-                    )}
+                    )} */}
                   </CCol>
-                  <CCol md={6}>
+                  {/* <CCol md={6}>
                     <CFormLabel
                       className="label-gradient"
                       style={{ color: NGK_COLORS.primarySoft }}
@@ -941,8 +952,8 @@ export default function CustomerRegistrationRefferalCode() {
                     {errors.referBy && (
                       <p style={{ color: 'red', fontSize: 13 }}>{errors.referBy}</p>
                     )}
-                  </CCol>
-                  <CCol md={12}>
+                  </CCol> */}
+                  <CCol md={6}>
                     <CFormLabel
                       className="label-gradient "
                       style={{ color: NGK_COLORS.primarySoft }}
