@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { NGK_COLORS } from '../../../Constant/Themes'
 
+// eslint-disable-next-line react/prop-types
 export default function LaunchCountdown({ onComplete }) {
   const targetDate = new Date('2026-03-08T00:00:00').getTime()
   const [timeLeft, setTimeLeft] = useState(null)
@@ -61,8 +62,9 @@ export default function LaunchCountdown({ onComplete }) {
             App Access Coming Soon!
           </h2>
           <p style={{ fontSize: 16, opacity: 0.9, marginBottom: 20, color: 'white' }}>
-            We’ll be sharing your exclusive app access very soon. You’re officially a <strong> Basic Member </strong> 
-            of Neesha’s GlowKart ✨ Enjoy early features, priority booking & special rewards.
+            We’ll be sharing your exclusive app access very soon. You’re officially a{' '}
+            <strong> Basic Member </strong>
+            of Neeha’s GlowKart ✨ Enjoy early features, priority booking & special rewards.
           </p>
           <strong style={{ fontSize: 16, opacity: 0.9, marginBottom: 20, color: 'white' }}>
             Stay tuned — access details will be shared shortly.
